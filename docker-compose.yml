@@ -3,17 +3,20 @@ version: "3"
 services:
     app:
         build:
-           context: app
+           context: .
            dockerfile: Dockerfile
         image: go_auth_service
         environment:
             APP_ENV: development    # Can be: development, production, testing
-            APP_HOST: domain.com    # For using with letsencrypt, only for production environment
+            APP_HOST: goauth.dev    # For using with letsencrypt, only for production environment
+            APP_PORT: ":80"          # Uses only in local environment
+            APP_CACHE_DIR: "/var/www/.cache"
+            DB_CONN: "user:password@tcp(db)/dbname?charset=utf8&parseTime=True&loc=Local"
             GIN_MODE: debug         # debug, release, test
         ports:
             - "8080:80"
-        volumes:
-            - /app/.cache:/var/www/.cache:rw
+        links:
+            - db
         networks:
             - auth-back-end
             - auth-front-end
@@ -22,13 +25,13 @@ services:
         image: mariadb
         environment:
             MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: auth
+            MYSQL_DATABASE: dbname
             MYSQL_USER: user
             MYSQL_PASSWORD: password
-        volumes:
-            - ./docker/db:/docker-entrypoint-initdb.d
         networks:
             - auth-back-end
+        # volumes:
+        #     - ./docker/db:/docker-entrypoint-initdb.d
 
     pma:
         image: phpmyadmin/phpmyadmin
