@@ -35,6 +35,9 @@ const (
 	ProdEnv string = "production"
 )
 
+var db *gorm.DB
+var err error
+
 func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -43,7 +46,7 @@ func main() {
 	r.Use(xssMdlwr.RemoveXss())
 	r.Use(nice.Recovery(recoveryHandler))
 
-	db, err := gorm.Open("mysql", os.Getenv(DBConnectString))
+	db, err = gorm.Open("mysql", os.Getenv(DBConnectString))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -150,7 +153,26 @@ func ResetPasswordHandler(c *gin.Context) {
 
 // APILoginHandler login user via API
 func APILoginHandler(c *gin.Context) {
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	var user User
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": http.StatusText(http.StatusNotFound)})
+		return
+	}
 
+	if user.CheckPassword(password) == false {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": http.StatusText(http.StatusUnauthorized)})
+		return
+	}
+
+	token, err := user.GenAccessToken()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": http.StatusText(http.StatusInternalServerError)})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"access_token": token})
+	return
 }
 
 // APIRegisterHandler register new user via API
