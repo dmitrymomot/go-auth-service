@@ -1,5 +1,7 @@
-# Go Auth Service [Under Development]
+# Go Auth Service
 Dockerized auth microservice based on Golang and Gin
+
+**Warning:** Project is under development.
 
 ## Features
 * [ ] JWT
