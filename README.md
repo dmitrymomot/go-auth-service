@@ -1,4 +1,4 @@
-# Go Auth Service
+# Go Auth Service [Under Development]
 Dockerized auth microservice based on Golang and Gin
 
 ## Features
